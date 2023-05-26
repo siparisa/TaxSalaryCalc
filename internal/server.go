@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"github.com/gin-gonic/gin"
@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-func setupRouter(logger *log.Logger) (*gin.Engine, error) {
+func SetupRouter(logger *log.Logger) (*gin.Engine, error) {
 	router := gin.Default()
 
 	// Create a router group for "income-tax" endpoints
