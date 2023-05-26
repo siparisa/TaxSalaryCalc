@@ -1,45 +1,126 @@
-# Interview Test Server
+# Tax Salary Calculation
 
-Welcome to the Points developer take-home assignment.
+The Tax Salary Calculation application provides an HTTP API with an endpoint that calculates the total income tax based on the annual income and tax year provided. The application returns the result of the calculation in JSON format.
 
-Your task is to build an app against a small API. [Download the docker image](#Getting-started) onto your computer and run it locally. 
+## Table of Contents
 
-**Please timebox your solution to one day total.**
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
+- [API Documentation](#api-documentation)
+- [Testing](#testing)
+- [Make Commands](#make-commands)
 
-## Getting started
+## Prerequisites
 
-```bash
-docker pull ptsdocker16/interview-test-server
-docker run --init -p 5000:5000 -it ptsdocker16/interview-test-server
+Before running the application, make sure you have the following prerequisites installed:
+
+- Go 
+- Docker
+
+## Getting Started
+
+To get started, follow these steps:
+
+1. Pull the Docker image:
+
+    ```shell
+    docker pull ptsdocker16/interview-test-server
+    ```
+
+2. Run the Docker container:
+
+    ```shell
+    docker run --init -p 5000:5000 -it ptsdocker16/interview-test-server
+    ```
+      feel free to use any avaiable port on your system
+
+3. Navigate to the root directory of the project in the command line.
+
+4. Run the following command to start the application:
+
+    ```shell
+    make run
+    ```
+
+   You will be prompted to enter the following ports:
+
+   - `PORT_TAX_YEAR`: Enter the port which the Docker container is running. For example, if the previous command used `PORT_TAX_YEAR=5000`, enter `5000`.
+   - `PORT_APP`: Enter the desired port for calling the API.
+
+5. To run the API, use the following endpoint:
+
+    ```
+    http://localhost:PORT_APP/income-tax/calculate-tax?year=X&salary=Y
+    ```
+
+   Replace `PORT_APP`, `X`, and `Y` with the appropriate values. For example:
+
+    ```
+    http://localhost:8080/income-tax/calculate-tax?year=2020&salary=78000
+    ```
+## API Documentation
+   Endpoint: `/income-tax/calculate-tax`
+   
+   Calculates the total income tax based on the provided annual income and tax year.
+
+   Request Method: `GET`
+
+   Parameters:
+   
+   1.`year` (required): The tax year for which the calculation is performed. Format: YYYY (e.g., 2022).
+
+   2.`salary` (required): The annual income amount for the calculation.
+
+   Example Request:
+
+  `GET /income-tax/calculate-tax?year=2022&salary=50000`
+  
+  Example Response: 
+  ```
+  HTTP/1.1 200 OK
+  Content-Type: application/json
+{
+"taxAmount": 7500.0
+}
+```
+`taxAmount`: The calculated total income tax amount.
+
+Error Responses:
+
+HTTP/1.1 400 Bad Request
+
+Content-Type: application/json
+
+Body:
+```
+{
+  "error": "Invalid Salary",
+  "details": "salary value is not numeric."
+}
+
 ```
 
-Navigate to [http://localhost:5000](http://localhost:5000). You should see a brief set of instructions. From there you'll be able to query the above endpoints and do your assignment. If you have any problems or need any sort of clarification, email the Team Lead or Engineering Hiring Manager for assistance.
+HTTP/1.1 500 Internal Server Error
 
-## Submission Instructions
+Content-Type: application/json
 
-You can either submit your code as a zip file or send a link to a personal repository. Do not fork or submit pull requests to this repository. 
+Body:
+```
+{
+  "error": "Internal Server Error",
+  "details": "Failed to get tax bracket."
+}
 
-Please *do not fork or submit pull requests* to this repository.
+```
+## Testing
 
-Try to timebox your solution to 4 hours.
+To run the tests, navigate to the root directory of the project in the command line and run the following command:
 
-* Implement your solution using a language agreed upon by your hiring manager.
-* Include comments where you feel that they would be helpful.
-* Include a README with instructions on how setup, run, and test the application.
-* Include unit tests.
+    `make test`
 
-**If using JavaScript**
-
-* Create a simple, yet visually appealing and responsive design.
-* Target the latest stable version of Google Chrome.
-
-**If using a backend language**
-
-* Implement a simple yet intuitive command line interface OR create an API endpoint to display the information in a JSON format.
-
-**Code Formatting**
-
-If using one of the following languages, make sure it adheres to the corresponding style guide:
-
-* JavaScript : Eslint
-* Python : PEP8
+## Make Commands
+  
+   |  Command        | Description                                                         |
+   |-----------------|---------------------------------------------------------------------|
+   | run             | Starts the service and all necessary dependencies in the foreground |
+   | tests           | Starts tests                                                        |    
