@@ -35,5 +35,11 @@ func GetTaxBracket(taxYear string) (*entity.TaxBrackets, error) {
 		return nil, fmt.Errorf("failed to decode JSON response: %v", err)
 	}
 
+	// Add the Band values dynamically
+	for i := range taxBrackets.TaxBrackets {
+		bandName := fmt.Sprintf("band%d", i+1)
+		taxBrackets.TaxBrackets[i].Band = bandName
+	}
+
 	return &taxBrackets, nil
 }

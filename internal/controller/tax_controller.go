@@ -27,21 +27,34 @@ func GetTotalIncomeTax(ctx *gin.Context) {
 	salaryStr := ctx.Query("salary")
 	taxYear := ctx.Query("year")
 
-	taxBracket, err := service.GetTaxBracket(taxYear)
+	// Retrieve the tax brackets for the given year
+	taxBrackets, err := service.GetTaxBracket(taxYear)
 	if err != nil {
-		helper.InternalServerError(ctx, "Failed to get tax bracket", "Failed to get tax bracket.")
+		helper.InternalServerError(ctx, "Failed to get tax brackets", "Failed to retrieve tax brackets.")
 		return
 	}
 
 	salary, err := strconv.ParseFloat(salaryStr, 64)
 	if err != nil {
-		helper.InternalServerError(ctx, "Invalid salary", "salary value is not numeric.")
+		helper.InternalServerError(ctx, "Invalid salary", "Salary value is not numeric.")
 		return
 	}
 
-	taxAmount := service.CalculateTaxForSalary(taxBracket, salary)
+	// Calculate the tax amount for the salary
+	taxAmount := service.CalculateTaxForSalary(taxBrackets, salary)
 
-	helper.OK(ctx, gin.H{
-		"taxAmount": taxAmount,
-	})
+	// Calculate the tax amount per band
+	taxAmountPerBand := service.CalculateTaxPerBand(taxBrackets, salary)
+
+	// Calculate the effective tax rate
+	effectiveRate := service.CalculateEffectiveRate(taxAmount, salary)
+
+	// Prepare the response
+	response := helper.TaxAmountResponse{
+		TotalTaxAmount:   taxAmount,
+		TaxAmountPerBand: taxAmountPerBand,
+		EffectiveRate:    effectiveRate,
+	}
+
+	helper.OK(ctx, response)
 }

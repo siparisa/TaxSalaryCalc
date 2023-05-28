@@ -23,3 +23,30 @@ func CalculateTaxForSalary(taxResponse *entity.TaxBrackets, salary float64) floa
 	}
 	return 0.0
 }
+
+// CalculateTaxPerBand calculates the tax amount per tax band based on the given salary and tax brackets.
+func CalculateTaxPerBand(taxBrackets *entity.TaxBrackets, salary float64) map[string]float64 {
+	taxAmountPerBand := make(map[string]float64)
+	previousMax := 0.0
+
+	for _, bracket := range taxBrackets.TaxBrackets {
+		if salary > bracket.Max {
+			taxableIncome := bracket.Max - previousMax
+			taxAmount := taxableIncome * bracket.Rate
+			taxAmountPerBand[bracket.Band] = taxAmount
+		} else if salary > bracket.Min {
+			taxableIncome := salary - previousMax
+			taxAmount := taxableIncome * bracket.Rate
+			taxAmountPerBand[bracket.Band] = taxAmount
+		}
+
+		previousMax = bracket.Max
+	}
+
+	return taxAmountPerBand
+}
+
+// CalculateEffectiveRate calculates the effective tax rate based on the given tax amount and salary.
+func CalculateEffectiveRate(taxAmount, salary float64) float64 {
+	return (taxAmount / salary) * 100
+}
