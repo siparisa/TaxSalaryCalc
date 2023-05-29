@@ -27,16 +27,16 @@ func GetTotalIncomeTax(ctx *gin.Context) {
 	salaryStr := ctx.Query("salary")
 	taxYear := ctx.Query("year")
 
+	salary, err := strconv.ParseFloat(salaryStr, 64)
+	if err != nil {
+		helper.InternalServerError(ctx, "Invalid salary", "Salary value is not numeric.")
+		return
+	}
+
 	// Retrieve the tax brackets for the given year
 	taxBrackets, err := service.GetTaxBracket(taxYear)
 	if err != nil {
 		helper.InternalServerError(ctx, "Failed to get tax brackets", "Failed to retrieve tax brackets.")
-		return
-	}
-
-	salary, err := strconv.ParseFloat(salaryStr, 64)
-	if err != nil {
-		helper.InternalServerError(ctx, "Invalid salary", "Salary value is not numeric.")
 		return
 	}
 
