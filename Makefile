@@ -1,6 +1,6 @@
 run:
     # Run the Application
-	go run ./cmd/main.go
+	go run ./cmd/*.go
 
 test:
 	# Run the tests

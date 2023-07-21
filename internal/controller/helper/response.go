@@ -12,27 +12,26 @@ type TaxAmountResponse struct {
 	EffectiveRate    float64            `json:"effectiveRate"`
 }
 
+// APIError represents the JSON response for API errors
+type APIError struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Details string `json:"details,omitempty"`
+}
+
 // BadRequest sends a Bad Request response with the provided error message.
-func BadRequest(ctx *gin.Context, message string, details string) {
-	ctx.JSON(http.StatusBadRequest, gin.H{
-		"details": details,
-		"error":   message,
+func BadRequest(ctx *gin.Context, message string) {
+	ctx.JSON(http.StatusBadRequest, APIError{
+		Code:    http.StatusBadRequest,
+		Message: message,
 	})
 }
 
 // InternalServerError sends an Internal Server Error response with the provided error message.
-func InternalServerError(ctx *gin.Context, message string, details string) {
-	ctx.JSON(http.StatusInternalServerError, gin.H{
-		"error":   message,
-		"details": details,
-	})
-}
-
-// BadRequestWithDetails sends a Bad Request response with the provided error message and details.
-func BadRequestWithDetails(ctx *gin.Context, message, details string) {
-	ctx.JSON(http.StatusBadRequest, gin.H{
-		"error":   message,
-		"details": details,
+func InternalServerError(ctx *gin.Context, message string) {
+	ctx.JSON(http.StatusInternalServerError, APIError{
+		Code:    http.StatusInternalServerError,
+		Message: message,
 	})
 }
 

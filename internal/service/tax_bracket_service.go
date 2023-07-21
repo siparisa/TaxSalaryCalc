@@ -5,21 +5,28 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/siparisa/interview-test-server/internal/entity"
 	"net/http"
-	"os"
 )
 
-// GetTaxBracket retrieves the tax response for the given year from the tax calculator API.
-func GetTaxBracket(taxYear string) (*entity.TaxBrackets, error) {
+type ITaxBracketService interface {
+	GetTaxBracket(taxYear string) (*entity.TaxBrackets, error)
+}
 
-	port := os.Getenv("PORT_TAX_YEAR")
-	if port == "" {
-		port = "7070"
+type taxBracketService struct {
+	taxCalculatorURL string
+}
+
+func NewTaxBracketService(taxCalculatorURL string) ITaxBracketService {
+	return &taxBracketService{
+		taxCalculatorURL: taxCalculatorURL,
 	}
+}
 
-	taxCalculatorURL := fmt.Sprintf("http://localhost:%s/tax-calculator/tax-year/%s", port, taxYear)
+// GetTaxBracket retrieves the tax response for the given year from the tax calculator API.
+func (s *taxBracketService) GetTaxBracket(taxYear string) (*entity.TaxBrackets, error) {
+	url := fmt.Sprintf("%s/tax-calculator/tax-year/%s", s.taxCalculatorURL, taxYear)
 
 	// Make request to tax calculator API
-	resp, err := http.Get(taxCalculatorURL)
+	resp, err := http.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request to tax calculator API: %v", err)
 	}
