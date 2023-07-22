@@ -40,38 +40,32 @@ func (s *taxService) CalculateTaxForSalary(taxBrackets *entity.TaxBrackets, sala
 
 // CalculateTaxPerBand calculates the tax amount per tax band based on the given salary and tax brackets.
 func (s *taxService) CalculateTaxPerBand(taxBrackets *entity.TaxBrackets, salary float64) (*entity.TaxCalculationResult, error) {
-
 	taxAmountPerBand := make(map[string]float64)
-	previousMax := 0.0
-	lastBracket := len(taxBrackets.TaxBrackets) - 1
+	totalTaxAmount := 0.0
 
 	for i, bracket := range taxBrackets.TaxBrackets {
-		if i == lastBracket {
+		taxableIncome := 0.0
+
+		if i == len(taxBrackets.TaxBrackets)-1 {
 			// Handle the last tax bracket separately
-			taxableIncome := salary - previousMax
-			taxAmount := decimal.NewFromFloat(taxableIncome).Mul(decimal.NewFromFloat(bracket.Rate))
-			roundedAmount, _ := taxAmount.Round(2).Float64()
-			taxAmountPerBand[bracket.Band] = roundedAmount
+			taxableIncome = salary - bracket.Min
 		} else if salary > bracket.Max {
-			taxableIncome := bracket.Max - previousMax
-			taxAmount := decimal.NewFromFloat(taxableIncome).Mul(decimal.NewFromFloat(bracket.Rate))
-			roundedAmount, _ := taxAmount.Round(2).Float64()
-			taxAmountPerBand[bracket.Band] = roundedAmount
+			taxableIncome = bracket.Max - bracket.Min
 		} else if salary > bracket.Min {
-			taxableIncome := salary - previousMax
-			taxAmount := decimal.NewFromFloat(taxableIncome).Mul(decimal.NewFromFloat(bracket.Rate))
-			roundedAmount, _ := taxAmount.Round(2).Float64()
-			taxAmountPerBand[bracket.Band] = roundedAmount
-			break // Exit the loop after adding the tax band for the current salary range
+			taxableIncome = salary - bracket.Min
 		}
 
-		previousMax = bracket.Max
+		if taxableIncome > 0 {
+			taxAmount := decimal.NewFromFloat(taxableIncome).Mul(decimal.NewFromFloat(bracket.Rate))
+			roundedAmount, _ := taxAmount.Round(2).Float64()
+			taxAmountPerBand[bracket.Band] = roundedAmount
+			totalTaxAmount += roundedAmount
+		}
 	}
 
-	// Calculate the total tax amount by summing up the tax amounts per band
-	totalTaxAmount := 0.0
-	for _, amount := range taxAmountPerBand {
-		totalTaxAmount += amount
+	// Check for negative total tax amount
+	if totalTaxAmount < 0 {
+		return nil, errors.New("total tax amount cannot be negative")
 	}
 
 	// Create and return the custom entity

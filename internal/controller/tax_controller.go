@@ -7,7 +7,6 @@ import (
 	"github.com/siparisa/interview-test-server/internal/controller/helper"
 	_ "github.com/siparisa/interview-test-server/internal/entity"
 	"github.com/siparisa/interview-test-server/internal/service"
-	"strconv"
 )
 
 type TaxController struct {
@@ -37,7 +36,6 @@ func NewTaxController(taxService service.ITaxService, taxBracketService service.
 func (c *TaxController) GetTotalIncomeTax(ctx *gin.Context) {
 	var qp helper.GetIncomeTaxParams
 	if err := ctx.ShouldBindQuery(&qp); err != nil {
-
 		if ve, ok := err.(validator.ValidationErrors); ok {
 			errorMsg := ""
 			for _, e := range ve {
@@ -54,9 +52,10 @@ func (c *TaxController) GetTotalIncomeTax(ctx *gin.Context) {
 	salaryStr := ctx.Query("salary")
 	taxYear := ctx.Query("year")
 
-	salary, err := strconv.ParseFloat(salaryStr, 64)
+	// Validate the salary input
+	salary, err := helper.IsValidSalary(ctx, salaryStr)
 	if err != nil {
-		helper.InternalServerError(ctx, "Invalid salary")
+		helper.BadRequest(ctx, err.Error())
 		return
 	}
 

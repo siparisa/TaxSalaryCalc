@@ -23,7 +23,8 @@ func NewTaxBracketService(taxCalculatorURL string) ITaxBracketService {
 
 // GetTaxBracket retrieves the tax response for the given year from the tax calculator API.
 func (s *taxBracketService) GetTaxBracket(taxYear string) (*entity.TaxBrackets, error) {
-	url := fmt.Sprintf("%s/tax-calculator/tax-year/%s", s.taxCalculatorURL, taxYear)
+
+	url := fmt.Sprintf(s.taxCalculatorURL + taxYear)
 
 	// Make request to tax calculator API
 	resp, err := http.Get(url)

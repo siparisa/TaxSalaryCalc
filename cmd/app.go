@@ -25,7 +25,7 @@ func initializeApp() (*gin.Engine, *log.Logger, error) {
 
 	taxCalculatorURL := os.Getenv("TAX_CALCULATOR_URL")
 	if taxCalculatorURL == "" {
-		taxCalculatorURL = "http://localhost:7070" // Default URL if not provided
+		taxCalculatorURL = "http://localhost:7070/tax-calculator/tax-year/" // Default URL if not provided
 	}
 
 	taxService := service.NewTaxService()
