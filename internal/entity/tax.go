@@ -12,3 +12,8 @@ type TaxBracket struct {
 type TaxBrackets struct {
 	TaxBrackets []TaxBracket `json:"tax_brackets"`
 }
+
+type TaxCalculationResult struct {
+	TaxAmountPerBand map[string]float64
+	TotalTaxAmount   float64
+}

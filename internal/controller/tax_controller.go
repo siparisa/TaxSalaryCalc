@@ -60,6 +60,12 @@ func (c *TaxController) GetTotalIncomeTax(ctx *gin.Context) {
 		return
 	}
 
+	// Validate the tax year input
+	if !helper.IsValidTaxYear(taxYear) {
+		helper.BadRequest(ctx, "Invalid tax year. Please select a valid tax year.")
+		return
+	}
+
 	// Retrieve the tax brackets for the given year
 	taxBrackets, err := c.taxBracketService.GetTaxBracket(taxYear)
 	if err != nil {
@@ -67,22 +73,22 @@ func (c *TaxController) GetTotalIncomeTax(ctx *gin.Context) {
 		return
 	}
 
-	// Calculate the tax amount for the salary
-	taxAmount, err := c.taxService.CalculateTaxForSalary(taxBrackets, salary)
-	if err != nil {
-		helper.InternalServerError(ctx, "Failed to calculate tax amount")
-		return
-	}
-
-	// Calculate the tax amount per band
-	taxAmountPerBand, err := c.taxService.CalculateTaxPerBand(taxBrackets, salary)
+	// Calculate the tax amount per band and total tax amount
+	taxAmountBands, err := c.taxService.CalculateTaxPerBand(taxBrackets, salary)
 	if err != nil {
 		helper.InternalServerError(ctx, "Failed to calculate tax amount per band")
 		return
 	}
 
+	// Calculate the total tax salary
+	totalTaxSalary, err := c.taxService.CalculateTaxForSalary(taxBrackets, salary, taxAmountBands.TotalTaxAmount)
+	if err != nil {
+		helper.InternalServerError(ctx, "Failed to calculate total tax salary")
+		return
+	}
+
 	// Calculate the effective tax rate
-	effectiveRate, err := c.taxService.CalculateEffectiveRate(taxAmount, salary)
+	effectiveRate, err := c.taxService.CalculateEffectiveRate(totalTaxSalary, salary)
 	if err != nil {
 		helper.InternalServerError(ctx, "Failed to calculate Effective Rate")
 		return
@@ -90,8 +96,8 @@ func (c *TaxController) GetTotalIncomeTax(ctx *gin.Context) {
 
 	// Prepare the response
 	response := helper.TaxAmountResponse{
-		TotalTaxAmount:   taxAmount,
-		TaxAmountPerBand: taxAmountPerBand,
+		TotalTaxAmount:   totalTaxSalary,
+		TaxAmountPerBand: taxAmountBands.TaxAmountPerBand,
 		EffectiveRate:    effectiveRate,
 	}
 
