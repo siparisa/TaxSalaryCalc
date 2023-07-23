@@ -7,6 +7,7 @@ import (
 	"github.com/siparisa/interview-test-server/internal/controller/helper"
 	_ "github.com/siparisa/interview-test-server/internal/entity"
 	"github.com/siparisa/interview-test-server/internal/service"
+	"time"
 )
 
 type TaxController struct {
@@ -66,7 +67,7 @@ func (c *TaxController) GetTotalIncomeTax(ctx *gin.Context) {
 	}
 
 	// Retrieve the tax brackets for the given year
-	taxBrackets, err := c.taxBracketService.GetTaxBracket(taxYear)
+	taxBrackets, err := c.taxBracketService.GetTaxBracket(taxYear, 3, time.Second)
 	if err != nil {
 		helper.InternalServerError(ctx, "Failed to get tax brackets")
 		return

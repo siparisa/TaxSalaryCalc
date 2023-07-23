@@ -5,10 +5,11 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/siparisa/interview-test-server/internal/entity"
 	"net/http"
+	"time"
 )
 
 type ITaxBracketService interface {
-	GetTaxBracket(taxYear string) (*entity.TaxBrackets, error)
+	GetTaxBracket(taxYear string, maxRetries int, retryInterval time.Duration) (*entity.TaxBrackets, error)
 }
 
 type taxBracketService struct {
@@ -22,32 +23,38 @@ func NewTaxBracketService(taxCalculatorURL string) ITaxBracketService {
 }
 
 // GetTaxBracket retrieves the tax response for the given year from the tax calculator API.
-func (s *taxBracketService) GetTaxBracket(taxYear string) (*entity.TaxBrackets, error) {
-
+func (s *taxBracketService) GetTaxBracket(taxYear string, maxRetries int, retryInterval time.Duration) (*entity.TaxBrackets, error) {
 	url := fmt.Sprintf(s.taxCalculatorURL + taxYear)
 
-	// Make request to tax calculator API
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, fmt.Errorf("failed to make request to tax calculator API: %v", err)
-	}
-	defer resp.Body.Close()
+	for retry := 0; retry <= maxRetries; retry++ {
+		if retry > 0 {
+			// Wait for the specified retry interval before the next attempt
+			time.Sleep(retryInterval)
+		}
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to get tax bracket, received non-OK status code: %d", resp.StatusCode)
+		resp, err := http.Get(url)
+		if err != nil {
+			continue
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			continue
+		}
+
+		var taxBrackets entity.TaxBrackets
+		err = json.NewDecoder(resp.Body).Decode(&taxBrackets)
+		if err != nil {
+			continue
+		}
+
+		for i := range taxBrackets.TaxBrackets {
+			bandName := fmt.Sprintf("band%d", i+1)
+			taxBrackets.TaxBrackets[i].Band = bandName
+		}
+
+		return &taxBrackets, nil
 	}
 
-	var taxBrackets entity.TaxBrackets
-	err = json.NewDecoder(resp.Body).Decode(&taxBrackets)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode JSON response: %v", err)
-	}
-
-	// Add the Band values dynamically
-	for i := range taxBrackets.TaxBrackets {
-		bandName := fmt.Sprintf("band%d", i+1)
-		taxBrackets.TaxBrackets[i].Band = bandName
-	}
-
-	return &taxBrackets, nil
+	return nil, fmt.Errorf("failed to get tax bracket after %d retries", maxRetries)
 }

@@ -28,50 +28,56 @@ func (s *taxService) CalculateTaxForSalary(taxBrackets *entity.TaxBrackets, sala
 	}
 
 	// Use the totalTaxAmount if it's greater than 0, otherwise calculate the tax amount as before.
-	var taxAmount float64
+	var taxAmount decimal.Decimal
 	if totalTaxAmount > 0 {
-		taxAmount = totalTaxAmount
+		taxAmount = decimal.NewFromFloat(totalTaxAmount)
 	} else {
-		taxAmount = salary * taxBracket.Rate
+		taxAmount = decimal.NewFromFloat(salary).Mul(decimal.NewFromFloat(taxBracket.Rate))
 	}
 
-	return taxAmount, nil
+	// Convert the decimal.Decimal taxAmount back to float64 for compatibility with the existing code.
+	roundedAmount, _ := taxAmount.Round(2).Float64()
+
+	return roundedAmount, nil
 }
 
 // CalculateTaxPerBand calculates the tax amount per tax band based on the given salary and tax brackets.
 func (s *taxService) CalculateTaxPerBand(taxBrackets *entity.TaxBrackets, salary float64) (*entity.TaxCalculationResult, error) {
 	taxAmountPerBand := make(map[string]float64)
-	totalTaxAmount := 0.0
+	totalTaxAmount := decimal.NewFromFloat(0)
 
 	for i, bracket := range taxBrackets.TaxBrackets {
-		taxableIncome := 0.0
+		taxableIncome := decimal.NewFromFloat(0)
 
 		if i == len(taxBrackets.TaxBrackets)-1 {
 			// Handle the last tax bracket separately
-			taxableIncome = salary - bracket.Min
+			taxableIncome = decimal.NewFromFloat(salary).Sub(decimal.NewFromFloat(bracket.Min))
 		} else if salary > bracket.Max {
-			taxableIncome = bracket.Max - bracket.Min
+			taxableIncome = decimal.NewFromFloat(bracket.Max).Sub(decimal.NewFromFloat(bracket.Min))
 		} else if salary > bracket.Min {
-			taxableIncome = salary - bracket.Min
+			taxableIncome = decimal.NewFromFloat(salary).Sub(decimal.NewFromFloat(bracket.Min))
 		}
 
-		if taxableIncome > 0 {
-			taxAmount := decimal.NewFromFloat(taxableIncome).Mul(decimal.NewFromFloat(bracket.Rate))
+		if taxableIncome.GreaterThan(decimal.NewFromFloat(0)) {
+			taxAmount := taxableIncome.Mul(decimal.NewFromFloat(bracket.Rate))
 			roundedAmount, _ := taxAmount.Round(2).Float64()
 			taxAmountPerBand[bracket.Band] = roundedAmount
-			totalTaxAmount += roundedAmount
+			totalTaxAmount = totalTaxAmount.Add(decimal.NewFromFloat(roundedAmount))
 		}
 	}
 
 	// Check for negative total tax amount
-	if totalTaxAmount < 0 {
+	if totalTaxAmount.LessThan(decimal.NewFromFloat(0)) {
 		return nil, errors.New("total tax amount cannot be negative")
 	}
+
+	// Convert the decimal.Decimal totalTaxAmount back to float64 for compatibility with the existing code.
+	roundedTotalAmount, _ := totalTaxAmount.Round(2).Float64()
 
 	// Create and return the custom entity
 	result := &entity.TaxCalculationResult{
 		TaxAmountPerBand: taxAmountPerBand,
-		TotalTaxAmount:   totalTaxAmount,
+		TotalTaxAmount:   roundedTotalAmount,
 	}
 
 	return result, nil
@@ -90,10 +96,26 @@ func (s *taxService) CalculateEffectiveRate(taxAmount, salary float64) (float64,
 
 // getTaxBracketForSalary finds the appropriate tax bracket for the given salary.
 func getTaxBracketForSalary(taxBrackets entity.TaxBrackets, salary float64) (*entity.TaxBracket, error) {
+	decimalSalary := decimal.NewFromFloat(salary)
+
 	for _, bracket := range taxBrackets.TaxBrackets {
-		if salary >= bracket.Min && salary <= bracket.Max {
-			return &bracket, nil
+		decimalMin := decimal.NewFromFloat(bracket.Min)
+
+		// Check if the current bracket is the last one (no maximum value specified)
+		if bracket.Max == 0 {
+			// The last bracket covers all salaries greater than or equal to its minimum value
+			if decimalSalary.GreaterThanOrEqual(decimalMin) {
+				return &bracket, nil
+			}
+		} else {
+			decimalMax := decimal.NewFromFloat(bracket.Max)
+
+			// Check if the salary falls within the current bracket's range
+			if decimalSalary.GreaterThanOrEqual(decimalMin) && decimalSalary.LessThanOrEqual(decimalMax) {
+				return &bracket, nil
+			}
 		}
 	}
+
 	return nil, errors.New("tax bracket not found for the given salary")
 }
