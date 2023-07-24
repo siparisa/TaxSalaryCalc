@@ -13,6 +13,7 @@ type TaxBrackets struct {
 	TaxBrackets []TaxBracket `json:"tax_brackets"`
 }
 
+// TaxCalculationResult represents the final response result
 type TaxCalculationResult struct {
 	TaxAmountPerBand map[string]float64
 	TotalTaxAmount   float64

@@ -117,22 +117,24 @@ To run the tests, navigate to the root directory of the project in the command l
 
 ## Make Commands
   
-   |  Command        | Description                                                         |
-   |-----------------|---------------------------------------------------------------------|
-   | run             | Starts the service and all necessary dependencies in the foreground |
-   | tests           | Starts tests                                                        |    
+   |  Command       | Description                                                         |
+   |----------------|---------------------------------------------------------------------|
+   | run            | Starts the service and all necessary dependencies in the foreground |
+   | test           | Starts tests                                                        |    
 
 ## Project Layout
 
 This project roughly followed the layout of Go projects as described at
 [https://github.com/golang-standards/project-layout](https://github.com/golang-standards/project-layout).
 
-| Directory     | Description                                                                                    |
-|---------------|------------------------------------------------------------------------------------------------|
-| `cmd/`        | This Go package is where `main` is used for the executables of the project                     |
-| `internal/`   | Application specific Go packages, e.g., they cannot be shared and are specific to this service |
-| `migrations/` | Any files relating to migration                                                                |
-| `tests/`      | tests for the service are located in here.                                                     |
+| Directory              | Description                                                                                    |
+|------------------------|------------------------------------------------------------------------------------------------|
+| `cmd/`                 | This Go package is where `main` is used for the executables of the project                     |
+| `internal/`            | Application specific Go packages, e.g., they cannot be shared and are specific to this service |
+| `internal/repository`  | Any files relating to repository layer                                                         |
+| `internal/database`    | Any files relating to database connection and configuration                                    |
+| `internal/migrations/` | Any files relating to migration                                                                |
+| `internal/tests/`      | tests for the service are located in here.                                                     |
 
 ### Layers and Folder Structure
 

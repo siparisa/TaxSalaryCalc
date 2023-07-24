@@ -20,6 +20,7 @@ func NewTaxService() ITaxService {
 	return &taxService{}
 }
 
+// CalculateTaxForSalary is a function to calculate tax salary based on tax brackets
 func (s *taxService) CalculateTaxForSalary(taxBrackets *entity.TaxBrackets, salary float64, totalTaxAmount float64) (float64, error) {
 	// Calculate the tax amount for the given salary based on the tax brackets.
 	taxBracket, err := getTaxBracketForSalary(*taxBrackets, salary)
@@ -85,10 +86,10 @@ func (s *taxService) CalculateTaxPerBand(taxBrackets *entity.TaxBrackets, salary
 
 // CalculateEffectiveRate calculates the effective tax rate based on the given tax amount and salary.
 func (s *taxService) CalculateEffectiveRate(taxAmount, salary float64) (float64, error) {
-	if salary == 0.0 {
-		return 0.0, errors.New("salary cannot be zero")
-	}
 
+	if salary == 0 {
+		return 0.00, nil
+	}
 	taxRate := decimal.NewFromFloat(taxAmount).Div(decimal.NewFromFloat(salary)).Mul(decimal.NewFromFloat(100))
 	roundedRate, _ := taxRate.Round(2).Float64() // Round to 2 decimal places and convert to float64
 	return roundedRate, nil

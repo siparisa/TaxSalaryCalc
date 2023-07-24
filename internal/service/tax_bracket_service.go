@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// ITaxBracketService defines the interface for bracket-related calculations.
 type ITaxBracketService interface {
 	GetTaxBracket(taxYear string, maxRetries int, retryInterval time.Duration) (*entity.TaxBrackets, error)
 }
@@ -16,6 +17,7 @@ type taxBracketService struct {
 	taxCalculatorURL string
 }
 
+// NewTaxBracketService creates a new instance of the taxBracketService.
 func NewTaxBracketService(taxCalculatorURL string) ITaxBracketService {
 	return &taxBracketService{
 		taxCalculatorURL: taxCalculatorURL,

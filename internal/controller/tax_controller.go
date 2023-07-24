@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/siparisa/interview-test-server/internal/controller/helper"
@@ -16,7 +15,6 @@ type TaxController struct {
 }
 
 // NewTaxController creates a new instance of TaxController with the given ITaxService and ITaxBracketService.
-// It takes ITaxService and ITaxBracketService as parameters and returns a pointer to the newly created TaxController.
 func NewTaxController(taxService service.ITaxService, taxBracketService service.ITaxBracketService) *TaxController {
 	return &TaxController{
 		taxService:        taxService,
@@ -38,10 +36,7 @@ func (c *TaxController) GetTotalIncomeTax(ctx *gin.Context) {
 	var qp helper.GetIncomeTaxParams
 	if err := ctx.ShouldBindQuery(&qp); err != nil {
 		if ve, ok := err.(validator.ValidationErrors); ok {
-			errorMsg := ""
-			for _, e := range ve {
-				errorMsg += fmt.Sprintf("Field %s failed validation: %s\n", e.Field(), e.Tag())
-			}
+			errorMsg := helper.GetValidationErrorMessage(ve)
 			helper.BadRequest(ctx, errorMsg)
 			return
 		}
@@ -53,14 +48,14 @@ func (c *TaxController) GetTotalIncomeTax(ctx *gin.Context) {
 	salaryStr := ctx.Query("salary")
 	taxYear := ctx.Query("year")
 
-	// Validate the salary input
+	// Validate the positive salary input
 	salary, err := helper.IsValidSalary(ctx, salaryStr)
 	if err != nil {
 		helper.BadRequest(ctx, err.Error())
 		return
 	}
 
-	// Validate the tax year input
+	// Validate the valid tax year input
 	if !helper.IsValidTaxYear(taxYear) {
 		helper.BadRequest(ctx, "Invalid tax year. Please select a valid tax year.")
 		return
